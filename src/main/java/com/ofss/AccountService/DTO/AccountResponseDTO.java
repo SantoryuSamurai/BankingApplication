@@ -1,5 +1,6 @@
 package com.ofss.AccountService.DTO;
 
+import com.ofss.AccountService.models.AccountStatus;
 import com.ofss.AccountService.models.Bank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,7 +18,7 @@ public class AccountResponseDTO {
 //    private String bankName;
     private String accountType;
     private BigDecimal balance;
-    private String status;
+    private AccountStatus status;
     private LocalDateTime createdAt;
     private CustomerResponseDTO customer;
     private BankResponseDTO bank;

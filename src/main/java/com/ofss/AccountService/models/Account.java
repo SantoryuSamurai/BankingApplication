@@ -30,8 +30,8 @@ public class Account {
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal balance = BigDecimal.ZERO;
 
-    @Column(length = 50)
-    private String status = "ACTIVE"; // e.g., ACTIVE, FROZEN, CLOSED
+    @Enumerated(EnumType.STRING)
+    private AccountStatus status = AccountStatus.ACTIVE;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();

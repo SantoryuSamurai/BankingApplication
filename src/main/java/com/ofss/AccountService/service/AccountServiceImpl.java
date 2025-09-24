@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,10 +25,13 @@ public class AccountServiceImpl implements AccountService{
         return accounts.stream().map(acc -> new AccountResponseDTO(
                 acc.getId(),
                 acc.getAccountNumber(),
+//                acc.getBank().getName(),
                 acc.getAccountType(),
                 acc.getBalance(),
                 acc.getStatus(),
                 acc.getCreatedAt(),
+
+
                 // map Customer to CustomerDTO
                 new CustomerResponseDTO(
                         acc.getCustomer().getCustomerId(),
@@ -45,5 +49,30 @@ public class AccountServiceImpl implements AccountService{
                 )
         )).collect(Collectors.toList());
 
+    }
+    @Override
+    public Optional<AccountResponseDTO> getAccountById(Long id) {
+        return accountRepository.findById(id).map(acc -> new AccountResponseDTO(
+                acc.getId(),
+                acc.getAccountNumber(),
+//                acc.getBank().getName(),
+                acc.getAccountType(),
+                acc.getBalance(),
+                acc.getStatus(),
+                acc.getCreatedAt(),
+                new CustomerResponseDTO(
+                        acc.getCustomer().getCustomerId(),
+                        acc.getCustomer().getName(),
+                        acc.getCustomer().getEmail(),
+                        acc.getCustomer().getPhone(),
+                        acc.getCustomer().getAddress()
+                ),
+                new BankResponseDTO(
+                        acc.getBank().getId(),
+                        acc.getBank().getName(),
+                        acc.getBank().getIfsc_code(),
+                        acc.getBank().getAddress()
+                )
+        ));
     }
 }

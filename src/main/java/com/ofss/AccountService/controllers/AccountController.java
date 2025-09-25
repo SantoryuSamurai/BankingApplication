@@ -73,7 +73,7 @@ public class AccountController {
         }
     }
 
-    @PostMapping("/deposit/account/id/{accountId}")
+    @PostMapping("/user/deposit/account/id/{accountId}")
     public ResponseEntity<?> depositAmount(@PathVariable Long accountId, @RequestBody DepositRequestDTO depositRequestDTO) {
         try {
             AccountResponseDTO updatedAccount = accountService.depositAmount(accountId, depositRequestDTO.getDepositAmount());
@@ -86,7 +86,7 @@ public class AccountController {
         }
     }
 
-    @PostMapping("/withdraw/account/id/{accountId}")
+    @PostMapping("/user/withdraw/account/id/{accountId}")
     public ResponseEntity<?> withdrawAmount(@PathVariable Long accountId, @RequestBody WithdrawRequestDTO withdrawRequestDTO) {
         try {
             AccountResponseDTO updatedAccount = accountService.withdrawAmount(accountId, withdrawRequestDTO.getWithdrawAmount());
@@ -99,7 +99,7 @@ public class AccountController {
         }
     }
 
-    @PostMapping("/transfer/{fromAccountId}/{toAccountId}")
+    @PostMapping("/user/transfer/{fromAccountId}/{toAccountId}")
     public ResponseEntity<?> transferAmount(
             @PathVariable Long fromAccountId,
             @PathVariable Long toAccountId,

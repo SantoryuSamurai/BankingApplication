@@ -14,6 +14,7 @@ import com.ofss.AccountService.repository.CustomerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -225,6 +226,118 @@ public class AccountServiceImpl implements AccountService{
                 })
                 .orElseThrow(() -> new RuntimeException("Account not found"));
     }
+
+    @Override
+    public AccountResponseDTO depositAmount(Long accountId, BigDecimal amount) {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new RuntimeException("Account not found"));
+
+        account.setBalance(account.getBalance().add(amount));
+        Account savedAccount = accountRepository.save(account);
+
+        return new AccountResponseDTO(
+                savedAccount.getId(),
+                savedAccount.getAccountNumber(),
+                savedAccount.getAccountType(),
+                savedAccount.getBalance(),
+                savedAccount.getStatus(),
+                savedAccount.getCreatedAt(),
+                new CustomerResponseDTO(
+                        savedAccount.getCustomer().getCustomerId(),
+                        savedAccount.getCustomer().getName(),
+                        savedAccount.getCustomer().getEmail(),
+                        savedAccount.getCustomer().getPhone(),
+                        savedAccount.getCustomer().getAddress()
+                ),
+                new BankResponseDTO(
+                        savedAccount.getBank().getId(),
+                        savedAccount.getBank().getName(),
+                        savedAccount.getBank().getIfsc_code(),
+                        savedAccount.getBank().getAddress()
+                )
+        );
+    }
+
+    @Override
+    public AccountResponseDTO withdrawAmount(Long accountId, BigDecimal amount) {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new RuntimeException("Account not found"));
+
+        if (account.getBalance().compareTo(amount) < 0) {
+            throw new RuntimeException("Insufficient balance");
+        }
+
+        account.setBalance(account.getBalance().subtract(amount));
+        Account savedAccount = accountRepository.save(account);
+
+        return new AccountResponseDTO(
+                savedAccount.getId(),
+                savedAccount.getAccountNumber(),
+                savedAccount.getAccountType(),
+                savedAccount.getBalance(),
+                savedAccount.getStatus(),
+                savedAccount.getCreatedAt(),
+                new CustomerResponseDTO(
+                        savedAccount.getCustomer().getCustomerId(),
+                        savedAccount.getCustomer().getName(),
+                        savedAccount.getCustomer().getEmail(),
+                        savedAccount.getCustomer().getPhone(),
+                        savedAccount.getCustomer().getAddress()
+                ),
+                new BankResponseDTO(
+                        savedAccount.getBank().getId(),
+                        savedAccount.getBank().getName(),
+                        savedAccount.getBank().getIfsc_code(),
+                        savedAccount.getBank().getAddress()
+                )
+        );
+    }
+
+    @Override
+    public AccountResponseDTO transferAmount(Long fromAccountId, Long toAccountId, BigDecimal amount) {
+        Account fromAccount = accountRepository.findById(fromAccountId)
+                .orElseThrow(() -> new RuntimeException("Source account not found"));
+
+        Account toAccount = accountRepository.findById(toAccountId)
+                .orElseThrow(() -> new RuntimeException("Target account not found"));
+
+        if (fromAccount.getBalance().compareTo(amount) < 0) {
+            throw new RuntimeException("Insufficient balance");
+        }
+
+        fromAccount.setBalance(fromAccount.getBalance().subtract(amount));
+        toAccount.setBalance(toAccount.getBalance().add(amount));
+
+        accountRepository.save(fromAccount);
+        Account updatedToAccount = accountRepository.save(toAccount);
+
+
+        return new AccountResponseDTO(
+                updatedToAccount.getId(),
+                updatedToAccount.getAccountNumber(),
+                updatedToAccount.getAccountType(),
+                updatedToAccount.getBalance(),
+                updatedToAccount.getStatus(),
+                updatedToAccount.getCreatedAt(),
+                new CustomerResponseDTO(
+                        updatedToAccount.getCustomer().getCustomerId(),
+                        updatedToAccount.getCustomer().getName(),
+                        updatedToAccount.getCustomer().getEmail(),
+                        updatedToAccount.getCustomer().getPhone(),
+                        updatedToAccount.getCustomer().getAddress()
+                ),
+                new BankResponseDTO(
+                        updatedToAccount.getBank().getId(),
+                        updatedToAccount.getBank().getName(),
+                        updatedToAccount.getBank().getIfsc_code(),
+                        updatedToAccount.getBank().getAddress()
+                )
+        );
+    }
+
+
+
+
 
 
 }

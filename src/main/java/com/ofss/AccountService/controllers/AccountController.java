@@ -1,7 +1,6 @@
 package com.ofss.AccountService.controllers;
 
-import com.ofss.AccountService.DTO.AccountPostDTO;
-import com.ofss.AccountService.DTO.AccountResponseDTO;
+import com.ofss.AccountService.DTO.*;
 import com.ofss.AccountService.service.AccountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -73,5 +72,50 @@ public class AccountController {
                     .body("An unexpected error occurred. Please try again later.");
         }
     }
+
+    @PostMapping("/deposit/account/id/{accountId}")
+    public ResponseEntity<?> depositAmount(@PathVariable Long accountId, @RequestBody DepositRequestDTO depositRequestDTO) {
+        try {
+            AccountResponseDTO updatedAccount = accountService.depositAmount(accountId, depositRequestDTO.getDepositAmount());
+            return ResponseEntity.ok(updatedAccount);
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred. Please try again later.");
+        }
+    }
+
+    @PostMapping("/withdraw/account/id/{accountId}")
+    public ResponseEntity<?> withdrawAmount(@PathVariable Long accountId, @RequestBody WithdrawRequestDTO withdrawRequestDTO) {
+        try {
+            AccountResponseDTO updatedAccount = accountService.withdrawAmount(accountId, withdrawRequestDTO.getWithdrawAmount());
+            return ResponseEntity.ok(updatedAccount);
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred. Please try again later.");
+        }
+    }
+
+    @PostMapping("/transfer/{fromAccountId}/{toAccountId}")
+    public ResponseEntity<?> transferAmount(
+            @PathVariable Long fromAccountId,
+            @PathVariable Long toAccountId,
+            @RequestBody TransferRequestDTO transferRequestDTO) {
+        try {
+            AccountResponseDTO updatedAccount = accountService.transferAmount(
+                    fromAccountId, toAccountId, transferRequestDTO.getTransferAmount());
+            return ResponseEntity.ok(updatedAccount);
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred. Please try again later.");
+        }
+    }
+
+
 
 }

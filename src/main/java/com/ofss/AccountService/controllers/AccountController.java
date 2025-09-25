@@ -1,14 +1,12 @@
 package com.ofss.AccountService.controllers;
 
+import com.ofss.AccountService.DTO.AccountPostDTO;
 import com.ofss.AccountService.DTO.AccountResponseDTO;
 import com.ofss.AccountService.service.AccountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
@@ -19,7 +17,7 @@ import java.util.Optional;
 public class AccountController {
     private final AccountService accountService;
 
-    @GetMapping("/account")
+    @GetMapping("/admin/account")
     public ResponseEntity<?> getAllAccounts() {
         List<AccountResponseDTO> accounts = accountService.getAllAccounts();
         if (accounts.isEmpty()) {
@@ -28,7 +26,7 @@ public class AccountController {
         return ResponseEntity.ok(accounts);
     }
 
-    @GetMapping("/account/id/{id}")
+    @GetMapping("/admin/account/id/{id}")
     public ResponseEntity<?> getAccountById(@PathVariable Long id) {
         Optional<AccountResponseDTO> accountOpt = accountService.getAccountById(id);
         if (accountOpt.isEmpty()) {
@@ -36,4 +34,44 @@ public class AccountController {
         }
         return ResponseEntity.ok(accountOpt.get());
     }
+
+    @PostMapping("/admin/account")
+    public ResponseEntity<?> createAccount(@RequestBody AccountPostDTO accountPostDTO) {
+        try {
+            AccountResponseDTO created = accountService.createAccount(accountPostDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred. Please try again later.");
+        }
+    }
+
+    @PutMapping("/admin/account/id/{accountId}")
+    public ResponseEntity<?> updateAccount(@PathVariable Long accountId, @RequestBody AccountPostDTO accountPostDTO) {
+        try {
+            AccountResponseDTO updatedAccount = accountService.updateAccount(accountId, accountPostDTO);
+            return ResponseEntity.ok(updatedAccount);
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred. Please try again later.");
+        }
+    }
+
+    @PatchMapping("/admin/account/id/{accountId}")
+    public ResponseEntity<?> patchAccount(@PathVariable Long accountId, @RequestBody AccountPostDTO accountPostDTO) {
+        try {
+            AccountResponseDTO updatedAccount = accountService.patchAccount(accountId, accountPostDTO);
+            return ResponseEntity.ok(updatedAccount);
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred. Please try again later.");
+        }
+    }
+
 }

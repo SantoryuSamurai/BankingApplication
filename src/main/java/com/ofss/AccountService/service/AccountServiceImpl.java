@@ -30,59 +30,14 @@ public class AccountServiceImpl implements AccountService{
     @Override
     public List<AccountResponseDTO> getAllAccounts() {
         List<Account> accounts = (List<Account>) accountRepository.findAll();
-
-        return accounts.stream().map(acc -> new AccountResponseDTO(
-                acc.getId(),
-                acc.getAccountNumber(),
-//                acc.getBank().getName(),
-                acc.getAccountType(),
-                acc.getBalance(),
-                acc.getStatus(),
-                acc.getCreatedAt(),
-
-
-                // map Customer to CustomerDTO
-                new CustomerResponseDTO(
-                        acc.getCustomer().getCustomerId(),
-                        acc.getCustomer().getName(),
-                        acc.getCustomer().getEmail(),
-                        acc.getCustomer().getPhone(),
-                        acc.getCustomer().getAddress()
-                ),
-                // map Bank to BankDTO
-                new BankResponseDTO(
-                        acc.getBank().getId(),
-                        acc.getBank().getName(),
-                        acc.getBank().getIfsc_code(),
-                        acc.getBank().getAddress()
-                )
-        )).collect(Collectors.toList());
-
+        return accounts.stream()
+                .map(this::mapToAccountResponseDTO)
+                .collect(Collectors.toList());
     }
+
     @Override
     public Optional<AccountResponseDTO> getAccountById(Long id) {
-        return accountRepository.findById(id).map(acc -> new AccountResponseDTO(
-                acc.getId(),
-                acc.getAccountNumber(),
-//                acc.getBank().getName(),
-                acc.getAccountType(),
-                acc.getBalance(),
-                acc.getStatus(),
-                acc.getCreatedAt(),
-                new CustomerResponseDTO(
-                        acc.getCustomer().getCustomerId(),
-                        acc.getCustomer().getName(),
-                        acc.getCustomer().getEmail(),
-                        acc.getCustomer().getPhone(),
-                        acc.getCustomer().getAddress()
-                ),
-                new BankResponseDTO(
-                        acc.getBank().getId(),
-                        acc.getBank().getName(),
-                        acc.getBank().getIfsc_code(),
-                        acc.getBank().getAddress()
-                )
-        ));
+        return accountRepository.findById(id).map(this::mapToAccountResponseDTO);
     }
 
     @Override
@@ -104,27 +59,7 @@ public class AccountServiceImpl implements AccountService{
         Account saved = accountRepository.save(account);
 
         // Map saved entity to response DTO
-        return new AccountResponseDTO(
-                saved.getId(),
-                saved.getAccountNumber(),
-                saved.getAccountType(),
-                saved.getBalance(),
-                saved.getStatus(),
-                saved.getCreatedAt(),
-                new CustomerResponseDTO(
-                        customer.getCustomerId(),
-                        customer.getName(),
-                        customer.getEmail(),
-                        customer.getPhone(),
-                        customer.getAddress()
-                ),
-                new BankResponseDTO(
-                        bank.getId(),
-                        bank.getName(),
-                        bank.getIfsc_code(),
-                        bank.getAddress()
-                )
-        );
+        return mapToAccountResponseDTO(saved);
     }
 
     @Override
@@ -146,27 +81,7 @@ public class AccountServiceImpl implements AccountService{
 
                     Account savedAccount = accountRepository.save(existingAccount);
 
-                    return new AccountResponseDTO(
-                            savedAccount.getId(),
-                            savedAccount.getAccountNumber(),
-                            savedAccount.getAccountType(),
-                            savedAccount.getBalance(),
-                            savedAccount.getStatus(),
-                            savedAccount.getCreatedAt(),
-                            new CustomerResponseDTO(
-                                    customer.getCustomerId(),
-                                    customer.getName(),
-                                    customer.getEmail(),
-                                    customer.getPhone(),
-                                    customer.getAddress()
-                            ),
-                            new BankResponseDTO(
-                                    bank.getId(),
-                                    bank.getName(),
-                                    bank.getIfsc_code(),
-                                    bank.getAddress()
-                            )
-                    );
+                    return mapToAccountResponseDTO(savedAccount);
                 })
                 .orElseThrow(() -> new RuntimeException("Account not found"));
     }
@@ -202,27 +117,7 @@ public class AccountServiceImpl implements AccountService{
                     Customer customer = updatedAccount.getCustomer();
                     Bank bank = updatedAccount.getBank();
 
-                    return new AccountResponseDTO(
-                            updatedAccount.getId(),
-                            updatedAccount.getAccountNumber(),
-                            updatedAccount.getAccountType(),
-                            updatedAccount.getBalance(),
-                            updatedAccount.getStatus(),
-                            updatedAccount.getCreatedAt(),
-                            new CustomerResponseDTO(
-                                    customer.getCustomerId(),
-                                    customer.getName(),
-                                    customer.getEmail(),
-                                    customer.getPhone(),
-                                    customer.getAddress()
-                            ),
-                            new BankResponseDTO(
-                                    bank.getId(),
-                                    bank.getName(),
-                                    bank.getIfsc_code(),
-                                    bank.getAddress()
-                            )
-                    );
+                    return mapToAccountResponseDTO(updatedAccount);
                 })
                 .orElseThrow(() -> new RuntimeException("Account not found"));
     }
@@ -235,27 +130,7 @@ public class AccountServiceImpl implements AccountService{
         account.setBalance(account.getBalance().add(amount));
         Account savedAccount = accountRepository.save(account);
 
-        return new AccountResponseDTO(
-                savedAccount.getId(),
-                savedAccount.getAccountNumber(),
-                savedAccount.getAccountType(),
-                savedAccount.getBalance(),
-                savedAccount.getStatus(),
-                savedAccount.getCreatedAt(),
-                new CustomerResponseDTO(
-                        savedAccount.getCustomer().getCustomerId(),
-                        savedAccount.getCustomer().getName(),
-                        savedAccount.getCustomer().getEmail(),
-                        savedAccount.getCustomer().getPhone(),
-                        savedAccount.getCustomer().getAddress()
-                ),
-                new BankResponseDTO(
-                        savedAccount.getBank().getId(),
-                        savedAccount.getBank().getName(),
-                        savedAccount.getBank().getIfsc_code(),
-                        savedAccount.getBank().getAddress()
-                )
-        );
+        return mapToAccountResponseDTO(savedAccount);
     }
 
     @Override
@@ -270,27 +145,7 @@ public class AccountServiceImpl implements AccountService{
         account.setBalance(account.getBalance().subtract(amount));
         Account savedAccount = accountRepository.save(account);
 
-        return new AccountResponseDTO(
-                savedAccount.getId(),
-                savedAccount.getAccountNumber(),
-                savedAccount.getAccountType(),
-                savedAccount.getBalance(),
-                savedAccount.getStatus(),
-                savedAccount.getCreatedAt(),
-                new CustomerResponseDTO(
-                        savedAccount.getCustomer().getCustomerId(),
-                        savedAccount.getCustomer().getName(),
-                        savedAccount.getCustomer().getEmail(),
-                        savedAccount.getCustomer().getPhone(),
-                        savedAccount.getCustomer().getAddress()
-                ),
-                new BankResponseDTO(
-                        savedAccount.getBank().getId(),
-                        savedAccount.getBank().getName(),
-                        savedAccount.getBank().getIfsc_code(),
-                        savedAccount.getBank().getAddress()
-                )
-        );
+        return mapToAccountResponseDTO(savedAccount);
     }
 
     @Override
@@ -311,33 +166,31 @@ public class AccountServiceImpl implements AccountService{
         accountRepository.save(fromAccount);
         Account updatedToAccount = accountRepository.save(toAccount);
 
+        return mapToAccountResponseDTO(updatedToAccount);
+    }
 
+    private AccountResponseDTO mapToAccountResponseDTO(Account account) {
         return new AccountResponseDTO(
-                updatedToAccount.getId(),
-                updatedToAccount.getAccountNumber(),
-                updatedToAccount.getAccountType(),
-                updatedToAccount.getBalance(),
-                updatedToAccount.getStatus(),
-                updatedToAccount.getCreatedAt(),
+                account.getId(),
+                account.getAccountNumber(),
+                account.getAccountType(),
+                account.getBalance(),
+                account.getStatus(),
+                account.getCreatedAt(),
                 new CustomerResponseDTO(
-                        updatedToAccount.getCustomer().getCustomerId(),
-                        updatedToAccount.getCustomer().getName(),
-                        updatedToAccount.getCustomer().getEmail(),
-                        updatedToAccount.getCustomer().getPhone(),
-                        updatedToAccount.getCustomer().getAddress()
+                        account.getCustomer().getCustomerId(),
+                        account.getCustomer().getName(),
+                        account.getCustomer().getEmail(),
+                        account.getCustomer().getPhone(),
+                        account.getCustomer().getAddress()
                 ),
                 new BankResponseDTO(
-                        updatedToAccount.getBank().getId(),
-                        updatedToAccount.getBank().getName(),
-                        updatedToAccount.getBank().getIfsc_code(),
-                        updatedToAccount.getBank().getAddress()
+                        account.getBank().getId(),
+                        account.getBank().getName(),
+                        account.getBank().getIfsc_code(),
+                        account.getBank().getAddress()
                 )
         );
     }
-
-
-
-
-
 
 }

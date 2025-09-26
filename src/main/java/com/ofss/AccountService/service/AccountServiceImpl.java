@@ -5,27 +5,30 @@ import com.ofss.AccountService.DTO.AccountResponseDTO;
 import com.ofss.AccountService.DTO.BankResponseDTO;
 import com.ofss.AccountService.DTO.CustomerResponseDTO;
 import com.ofss.AccountService.models.Account;
-import com.ofss.AccountService.models.AccountStatus;
 import com.ofss.AccountService.models.Bank;
 import com.ofss.AccountService.models.Customer;
+import com.ofss.AccountService.models.Transaction;
 import com.ofss.AccountService.repository.AccountRepository;
 import com.ofss.AccountService.repository.BankRepository;
 import com.ofss.AccountService.repository.CustomerRepository;
+import com.ofss.AccountService.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class AccountServiceImpl implements AccountService{
+public class AccountServiceImpl implements AccountService {
 
     private final AccountRepository accountRepository;
     private final CustomerRepository customerRepository;
     private final BankRepository bankRepository;
+    private final TransactionRepository transactionRepository; // Added
 
     @Override
     public List<AccountResponseDTO> getAllAccounts() {
@@ -52,13 +55,12 @@ public class AccountServiceImpl implements AccountService{
         account.setAccountNumber(accountPostDTO.getAccountNumber());
         account.setAccountType(accountPostDTO.getAccountType());
         account.setBalance(accountPostDTO.getBalance());
-        account.setStatus((accountPostDTO.getStatus()));
+        account.setStatus(accountPostDTO.getStatus());
         account.setCustomer(customer);
         account.setBank(bank);
 
         Account saved = accountRepository.save(account);
 
-        // Map saved entity to response DTO
         return mapToAccountResponseDTO(saved);
     }
 
@@ -114,9 +116,6 @@ public class AccountServiceImpl implements AccountService{
                     }
                     Account updatedAccount = accountRepository.save(existingAccount);
 
-                    Customer customer = updatedAccount.getCustomer();
-                    Bank bank = updatedAccount.getBank();
-
                     return mapToAccountResponseDTO(updatedAccount);
                 })
                 .orElseThrow(() -> new RuntimeException("Account not found"));
@@ -129,6 +128,9 @@ public class AccountServiceImpl implements AccountService{
 
         account.setBalance(account.getBalance().add(amount));
         Account savedAccount = accountRepository.save(account);
+
+        // Save transaction record
+        recordTransaction(amount, "DEPOSIT", null, account, account.getBank(), "Deposit to account");
 
         return mapToAccountResponseDTO(savedAccount);
     }
@@ -144,6 +146,9 @@ public class AccountServiceImpl implements AccountService{
 
         account.setBalance(account.getBalance().subtract(amount));
         Account savedAccount = accountRepository.save(account);
+
+        // Save transaction record
+        recordTransaction(amount, "WITHDRAW", account, null, account.getBank(), "Withdrawal from account");
 
         return mapToAccountResponseDTO(savedAccount);
     }
@@ -166,7 +171,23 @@ public class AccountServiceImpl implements AccountService{
         accountRepository.save(fromAccount);
         Account updatedToAccount = accountRepository.save(toAccount);
 
+        // Save transaction record
+        recordTransaction(amount, "TRANSFER", fromAccount, toAccount, fromAccount.getBank(), "Transfer between accounts");
+
         return mapToAccountResponseDTO(updatedToAccount);
+    }
+
+    private void recordTransaction(BigDecimal amount, String type, Account sourceAccount, Account targetAccount, Bank bank, String remarks) {
+        Transaction transaction = new Transaction();
+        transaction.setAmount(amount);
+        transaction.setType(type);
+        transaction.setTimestamp(LocalDateTime.now());
+        transaction.setSourceAccount(sourceAccount);
+        transaction.setTargetAccount(targetAccount);
+        transaction.setBank(bank);
+        transaction.setRemarks(remarks);
+
+        transactionRepository.save(transaction);
     }
 
     private AccountResponseDTO mapToAccountResponseDTO(Account account) {

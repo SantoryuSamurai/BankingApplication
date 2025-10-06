@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AccountPostDTO {
-    private String accountNumber;
+    //private String accountNumber;
     private String accountType;
     private BigDecimal balance;
     private AccountStatus status;

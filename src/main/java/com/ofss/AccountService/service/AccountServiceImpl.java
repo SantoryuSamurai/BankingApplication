@@ -19,6 +19,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,6 +30,54 @@ public class AccountServiceImpl implements AccountService {
     private final CustomerRepository customerRepository;
     private final BankRepository bankRepository;
     private final TransactionRepository transactionRepository; // Added
+
+    @Override
+    public AccountResponseDTO createAccount(AccountPostDTO accountPostDTO) {
+        Customer customer = customerRepository.findById(accountPostDTO.getCustomerId())
+                .orElseThrow(() -> new RuntimeException("Customer not found"));
+
+        Bank bank = bankRepository.findById(accountPostDTO.getBankId())
+                .orElseThrow(() -> new RuntimeException("Bank not found"));
+
+        Account account = new Account();
+        // Generate account number based on bank name
+        String bankCode = generateBankCode(bank.getName());
+        String accountNumber;
+        do {
+            accountNumber = bankCode + generateRandomDigits(6);
+        } while (accountRepository.existsByAccountNumber(accountNumber));
+        account.setAccountNumber(accountNumber);
+
+        account.setAccountType(accountPostDTO.getAccountType());
+        account.setBalance(accountPostDTO.getBalance());
+        account.setStatus(accountPostDTO.getStatus());
+        account.setCustomer(customer);
+        account.setBank(bank);
+
+        Account saved = accountRepository.save(account);
+
+        return mapToAccountResponseDTO(saved);
+    }
+
+    private String generateBankCode(String bankName) {
+        String shortCode = bankName.replaceAll("\\s+", "").toUpperCase();
+
+        if (shortCode.length() < 4) {
+            return String.format("%-4s", shortCode).replace(' ', '0');
+        } else {
+            return shortCode.substring(0, 4);
+        }
+    }
+
+
+    private String generateRandomDigits(int length) {
+        Random random = new Random();
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < length; i++) {
+            sb.append(random.nextInt(10));
+        }
+        return sb.toString();
+    }
 
     @Override
     public List<AccountResponseDTO> getAllAccounts() {
@@ -43,26 +92,6 @@ public class AccountServiceImpl implements AccountService {
         return accountRepository.findById(id).map(this::mapToAccountResponseDTO);
     }
 
-    @Override
-    public AccountResponseDTO createAccount(AccountPostDTO accountPostDTO) {
-        Customer customer = customerRepository.findById(accountPostDTO.getCustomerId())
-                .orElseThrow(() -> new RuntimeException("Customer not found"));
-
-        Bank bank = bankRepository.findById(accountPostDTO.getBankId())
-                .orElseThrow(() -> new RuntimeException("Bank not found"));
-
-        Account account = new Account();
-        account.setAccountNumber(accountPostDTO.getAccountNumber());
-        account.setAccountType(accountPostDTO.getAccountType());
-        account.setBalance(accountPostDTO.getBalance());
-        account.setStatus(accountPostDTO.getStatus());
-        account.setCustomer(customer);
-        account.setBank(bank);
-
-        Account saved = accountRepository.save(account);
-
-        return mapToAccountResponseDTO(saved);
-    }
 
     @Override
     public AccountResponseDTO updateAccount(Long accountId, AccountPostDTO accountPostDTO) {
@@ -74,12 +103,21 @@ public class AccountServiceImpl implements AccountService {
                     Bank bank = bankRepository.findById(accountPostDTO.getBankId())
                             .orElseThrow(() -> new RuntimeException("Bank not found"));
 
-                    existingAccount.setAccountNumber(accountPostDTO.getAccountNumber());
+//                    existingAccount.setAccountNumber(accountPostDTO.getAccountNumber());
                     existingAccount.setAccountType(accountPostDTO.getAccountType());
                     existingAccount.setBalance(accountPostDTO.getBalance());
                     existingAccount.setStatus(accountPostDTO.getStatus());
                     existingAccount.setCustomer(customer);
-                    existingAccount.setBank(bank);
+                    existingAccount.setBank(bank); // when new bank is applied
+
+                    // If the bank ID is changed, update the account number as well
+                    String newBankPrefix = generateBankCode(bank.getName());
+                    String newAccountNumber;
+                    do {
+                        newAccountNumber = newBankPrefix + generateRandomDigits(6);
+                    } while (accountRepository.existsByAccountNumber(newAccountNumber));
+                    existingAccount.setAccountNumber(newAccountNumber);
+
 
                     Account savedAccount = accountRepository.save(existingAccount);
 
@@ -92,9 +130,9 @@ public class AccountServiceImpl implements AccountService {
     public AccountResponseDTO patchAccount(Long accountId, AccountPostDTO accountPostDTO) {
         return accountRepository.findById(accountId)
                 .map(existingAccount -> {
-                    if (accountPostDTO.getAccountNumber() != null) {
-                        existingAccount.setAccountNumber(accountPostDTO.getAccountNumber());
-                    }
+//                    if (accountPostDTO.getAccountNumber() != null) {
+//                        existingAccount.setAccountNumber(accountPostDTO.getAccountNumber());
+//                    }
                     if (accountPostDTO.getAccountType() != null) {
                         existingAccount.setAccountType(accountPostDTO.getAccountType());
                     }
@@ -109,11 +147,20 @@ public class AccountServiceImpl implements AccountService {
                                 .orElseThrow(() -> new RuntimeException("Customer not found"));
                         existingAccount.setCustomer(customer);
                     }
-                    if (accountPostDTO.getBankId() != null) {
-                        Bank bank = bankRepository.findById(accountPostDTO.getBankId())
+                    if (accountPostDTO.getBankId() != null &&
+                            !existingAccount.getBank().getId().equals(accountPostDTO.getBankId())) {
+                        Bank newBank = bankRepository.findById(accountPostDTO.getBankId())
                                 .orElseThrow(() -> new RuntimeException("Bank not found"));
-                        existingAccount.setBank(bank);
+                        existingAccount.setBank(newBank);
+
+                        String newBankPrefix = generateBankCode(newBank.getName());
+                        String newAccountNumber;
+                        do {
+                            newAccountNumber = newBankPrefix + generateRandomDigits(6);
+                        } while (accountRepository.existsByAccountNumber(newAccountNumber));
+                        existingAccount.setAccountNumber(newAccountNumber);
                     }
+
                     Account updatedAccount = accountRepository.save(existingAccount);
 
                     return mapToAccountResponseDTO(updatedAccount);
